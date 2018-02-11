@@ -5,6 +5,7 @@ import logging
 import tarfile
 from six.moves import urllib
 import pandas as pd
+import luigi
 
 # logging
 current_dir = os.path.dirname(__file__)
@@ -12,7 +13,7 @@ logger = logging.getLogger('get_data')
 logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'), 'get_data'),level=logging.DEBUG)
 
 
-class GetData:
+class GetData(luigi.ExternalTask):
 
     # load config
     config_dir = os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'config')
@@ -28,32 +29,44 @@ class GetData:
     _FILE = data['csv_file']
     _file = data['raw_file']
     _URL = data['url']
+    csv_path = os.path.join(_Project_Path, _FILE)
+
+    def requires(self):
+        pass
+
+    def output(self):
+        return luigi.LocalTarget(self.csv_path)
+
+    def run(self):
+
+        def fetch_data(self):
+            """
+
+            """
+            logger.info('fetch data from web: {}'.format(self._URL))
+            print('fetch data from web: {}'.format(self._URL))
+
+            if not os.path.isdir(self._PATH):
+                os.makedirs(self._PATH)
+            tgz_path = os.path.join(self._PATH, self._FILE)
+            urllib.request.urlretrieve(self._URL, tgz_path)
+            file_tgz = tarfile.open(tgz_path)
+            file_tgz.extractall(path=self._PATH)
+            file_tgz.close()
 
 
-    def fetch_data(self, url=_URL, path=_Project_Path, file=_file):
-        """
+        def load_local_csv(self):
+            """
 
-        """
-        logger.info('fetch data from web: {}'.format(url))
-        print('fetch data from web: {}'.format(url))
+            """
+            logger.info('load local data from {}'.format(self._Project_Path))
 
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        tgz_path = os.path.join(path, file)
-        urllib.request.urlretrieve(url, tgz_path)
-        file_tgz = tarfile.open(tgz_path)
-        file_tgz.extractall(path=path)
-        file_tgz.close()
+            fetch_data()
+
+            print('load local data from {}'.format(self._Project_Path))
+
+            return pd.read_csv(self.csv_path)
 
 
-    def load_local_csv(self, path=_Project_Path, file=_FILE):
-        """
-
-        """
-        logger.info('load local data from {}'.format(path))
-
-        self.fetch_data()
-
-        print('load local data from {}'.format(path))
-        csv_path = os.path.join(path, file)
-        return pd.read_csv(csv_path)
+if __name__ == "__main__":
+    luigi.run(main_task_cls=GetData)
