@@ -69,4 +69,4 @@ class GetData(luigi.ExternalTask):
 
 
 if __name__ == "__main__":
-    luigi.run(main_task_cls=GetData)
+    luigi.run(["--local-scheduler"], main_task_cls=GetData)
