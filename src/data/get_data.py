@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
-import json
 import logging
 import tarfile
 from six.moves import urllib
 import pandas as pd
 import luigi
+from config import config
+
 
 # logging
 current_dir = os.path.dirname(__file__)
@@ -13,59 +14,50 @@ logger = logging.getLogger('get_data')
 logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'), 'get_data'),level=logging.DEBUG)
 
 
-class GetData(luigi.ExternalTask):
-
-    # load config
-    config_dir = os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'config')
-    data_config = os.path.join(config_dir, 'data_import.json')
-    with open(data_config) as data_file:
-        data = json.load(data_file)
+class GetData(luigi.Task):
 
     # set up parameter
-    _RAW = data['store_raw_data']
+    _RAW = config.data_location['store_raw_data']
     _PATH = os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), _RAW)
-    _Project = data['project_name']
+    _Project = config.data_location['project_name']
     _Project_Path = os.path.join(_PATH, _Project)
-    _FILE = data['csv_file']
-    _file = data['raw_file']
-    _URL = data['url']
-    csv_path = os.path.join(_Project_Path, _FILE)
+    _FILE = config.data_location['csv_file']
+    _file = config.data_location['raw_file']
+    _URL = config.data_location['url']
 
     def requires(self):
         pass
 
     def output(self):
-        return luigi.LocalTarget(self.csv_path)
+        csv_path = os.path.join(self._Project_Path, self._FILE)
+        return luigi.LocalTarget(csv_path)
 
     def run(self):
 
-        def fetch_data(self):
+        def fetch_data(url=self._URL, path=self._Project_Path, file=self._file):
             """
 
             """
-            logger.info('fetch data from web: {}'.format(self._URL))
-            print('fetch data from web: {}'.format(self._URL))
+            logger.info('fetch data from web: {}'.format(url))
+            print('fetch data from web: {}'.format(url))
 
-            if not os.path.isdir(self._PATH):
-                os.makedirs(self._PATH)
-            tgz_path = os.path.join(self._PATH, self._FILE)
-            urllib.request.urlretrieve(self._URL, tgz_path)
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            tgz_path = os.path.join(path, file)
+            urllib.request.urlretrieve(url, tgz_path)
             file_tgz = tarfile.open(tgz_path)
-            file_tgz.extractall(path=self._PATH)
+            file_tgz.extractall(path=path)
             file_tgz.close()
 
 
-        def load_local_csv(self):
-            """
+        logger.info('load local data from {}'.format(self._PATH))
 
-            """
-            logger.info('load local data from {}'.format(self._Project_Path))
+        fetch_data()
 
-            fetch_data()
+        print('load local data from {}'.format(self._PATH))
 
-            print('load local data from {}'.format(self._Project_Path))
-
-            return pd.read_csv(self.csv_path)
+        csv_path = os.path.join(self._Project_Path, self._FILE)
+        return pd.read_csv(csv_path, sep=',')
 
 
 if __name__ == "__main__":

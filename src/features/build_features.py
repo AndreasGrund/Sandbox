@@ -1,9 +1,10 @@
-
+# -*- coding: utf-8 -*-
 from sklearn.model_selection import train_test_split
 import os
-import json
+import luigi
 import logging
-
+from config import config
+import pandas as pd
 from data.get_data import GetData
 
 # logging
@@ -12,34 +13,42 @@ logger = logging.getLogger('build_features')
 logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),'build_feature'), level=logging.DEBUG)
 
 
-class TrainTestSplit:
+class TrainTestSplit(luigi.Task):
 
-    # load config
-    current_dir = os.path.dirname(__file__)
-    config_dir = os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'config')
-    data_config = os.path.join(config_dir, 'data_import.json')
-    with open(data_config) as data_file:
-        data = json.load(data_file)
+    test_size = config.feature_config["test_size"]
+    random_state = config.feature_config["random_state"]
 
-    # define parameter
-    _RAW = data['store_raw_data']
+    _RAW = config.data_location['store_raw_data']
     _PATH = os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), _RAW)
-    _Project = data['project_name']
+    _Project = config.data_location['project_name']
     _Project_Path = os.path.join(_PATH, _Project)
-    _FILE = data['csv_file']
+    _FILE = config.data_location['csv_file']
+    csv_path = os.path.join(_Project_Path, _FILE)
+
+    def requires(self):
+        return GetData()
+
+    # def output(self):
+    #     csv_path = os.path.join(self._Project_Path, self._FILE)
+    #     return luigi.LocalTarget(csv_path)
+
+    def run(self):
+
+        def build_test_set(self, test_size=self.test_size, random_state=self.random_state):
+            """
+
+            """
+            logger.info('build test and train set with test_size: {}'.format(test_size))
+
+            data = pd.read_csv(self.csv_path, sep=',')
+
+            train_set, test_set = train_test_split(data, test_size=test_size, random_state=random_state)
+
+            return train_set, test_set
 
 
-    def build_test_set(self, test_size=0.2, random_state=42):
-        """
-
-        """
-        logger.info('build test and train set with test_size: {}'.format(test_size))
-
-        data = GetData().load_local_csv()
-
-        train_set, test_set = train_test_split(data, test_size=test_size, random_state=random_state)
-
-        return train_set, test_set
+        train, test = build_test_set(self)
 
 
-train, test = TrainTestSplit().build_test_set()
+if __name__ == "__main__":
+    luigi.run(["--local-scheduler"], main_task_cls=TrainTestSplit)
