@@ -20,19 +20,14 @@ class TrainTestSplit(luigi.Task):
 
     test_size = config.feature_config["test_size"]
     random_state = config.feature_config["random_state"]
-
-    _RAW = config.data_location['store_raw_data']
-    _PATH = os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), _RAW)
-    _Project = config.data_location['project_name']
-    _Project_Path = os.path.join(_PATH, _Project)
-    _FILE = config.data_location['csv_file']
-    csv_path = os.path.join(_Project_Path, _FILE)
+    csv_path = config.feature_config["csv_file"]
 
     def requires(self):
         return GetData()
 
     # def output(self):
-    #     csv_path = os.path.join(self._Project_Path, self._FILE)
+    #     test  = os.path.join(self._Project_Path, self._FILE)
+    #      train =
     #     return luigi.LocalTarget(csv_path)
 
     def run(self):

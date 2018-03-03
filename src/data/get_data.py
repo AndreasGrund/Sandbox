@@ -11,9 +11,9 @@ from config.config import config
 
 # logging
 current_dir = os.path.dirname(__file__)
-logger = logging.getLogger('get_data')
+logger = logging.getLogger('pipeline')
 logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),
-                                          'get_data'), level=logging.DEBUG)
+                                          'pipeline'), level=logging.DEBUG)
 
 
 class GetData(luigi.Task):
