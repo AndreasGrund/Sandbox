@@ -11,9 +11,9 @@ from data.get_data import GetData
 
 # logging
 current_dir = os.path.dirname(__file__)
-logger = logging.getLogger('build_features')
+logger = logging.getLogger('pipeline')
 logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),
-                                          'build_feature'), level=logging.DEBUG)
+                                          'pipeline'), level=logging.DEBUG)
 
 
 class TrainTestSplit(luigi.Task):
@@ -47,6 +47,9 @@ class TrainTestSplit(luigi.Task):
 
 
         train, test = build_test_set(self)
+
+        logger.info('Save test and train set')
+        print('Save test and train set')
 
         train.to_csv(self.train_folder, sep=',')
         test.to_csv(self.test_folder, sep=',')
