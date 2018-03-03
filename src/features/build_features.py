@@ -21,14 +21,15 @@ class TrainTestSplit(luigi.Task):
     test_size = config.feature_config["test_size"]
     random_state = config.feature_config["random_state"]
     csv_path = config.feature_config["csv_file"]
+    train_folder = config.feature_config['train']
+    test_folder = config.feature_config['test']
 
     def requires(self):
         return GetData()
 
-    # def output(self):
-    #     test  = os.path.join(self._Project_Path, self._FILE)
-    #      train =
-    #     return luigi.LocalTarget(csv_path)
+    def output(self):
+        return {'train': luigi.LocalTarget(self.train_folder),
+                'test': luigi.LocalTarget(self.test_folder)}
 
     def run(self):
 
@@ -46,6 +47,9 @@ class TrainTestSplit(luigi.Task):
 
 
         train, test = build_test_set(self)
+
+        train.to_csv(self.train_folder, sep=',')
+        test.to_csv(self.test_folder, sep=',')
 
 
 if __name__ == "__main__":
