@@ -3,14 +3,15 @@ from sklearn.model_selection import train_test_split
 import os
 import luigi
 import logging
-from config import config
 import pandas as pd
+from config import config
 from data.get_data import GetData
 
 # logging
 current_dir = os.path.dirname(__file__)
 logger = logging.getLogger('build_features')
-logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),'build_feature'), level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),
+                                          'build_feature'), level=logging.DEBUG)
 
 
 class TrainTestSplit(luigi.Task):

@@ -11,7 +11,8 @@ from config import config
 # logging
 current_dir = os.path.dirname(__file__)
 logger = logging.getLogger('get_data')
-logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'), 'get_data'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),
+                                          'get_data'), level=logging.DEBUG)
 
 
 class GetData(luigi.Task):
