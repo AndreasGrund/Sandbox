@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-import os
 import logging
+import os
 import tarfile
-from six.moves import urllib
-import pandas as pd
-import luigi
-from config import config
 
+import luigi
+import pandas as pd
+from six.moves import urllib
+
+from config.config import config
 
 # logging
 current_dir = os.path.dirname(__file__)

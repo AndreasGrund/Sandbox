@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-from sklearn.model_selection import train_test_split
-import os
-import luigi
 import logging
+import os
+
+import luigi
 import pandas as pd
-from config import config
+from sklearn.model_selection import train_test_split
+
+from config.config import config
 from data.get_data import GetData
 
 # logging
