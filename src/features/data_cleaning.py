@@ -71,12 +71,15 @@ class DataCleaning(luigi.Task):
     test_folder = config.feature_config['test']
     target_value = config.feature_config["target_value"]
     input_strategy = config.feature_config["input_strategy"]
+    data_prepared = config.feature_config["data_prepared"]
+    train_labels = config.feature_config["train_labels"]
 
     def requires(self):
         return TrainTestSplit()
 
     def output(self):
-        pass
+        return {'data_prepared': luigi.LocalTarget(self.data_prepared),
+                'train_labels': luigi.LocalTarget(self.train_labels)}
 
     def run(self):
         """
@@ -89,6 +92,9 @@ class DataCleaning(luigi.Task):
         train_labels = train_raw[self.target_value].copy()
 
         def num_inputer():
+
+            logger.info('prepare numeric features')
+            print('prepare numeric features')
 
             train_num = train.select_dtypes(include=[np.number])
             num_attribs = list(train_num)
@@ -103,6 +109,8 @@ class DataCleaning(luigi.Task):
             return num_steps
 
         def label_encoder():
+            logger.info('prepare cat features')
+            print('prepare cat features')
 
             train_cat = train.select_dtypes(include=[np.chararray])
 
@@ -116,6 +124,8 @@ class DataCleaning(luigi.Task):
             return cat_steps
 
         def full_pipeline():
+            logger.info('prepare complete feature pipeline')
+            print('prepare complete feature pipeline')
 
             full_pipeline = FeatureUnion(transformer_list=[
                 ('num_pipeline', num_pipeline),
@@ -132,7 +142,10 @@ class DataCleaning(luigi.Task):
 
         data_prepared = full_pipeline.fit_transform(train)
 
-        data_prepared.shape
+        logger.info('save cleaned train set')
+        print('save cleaned train set')
+        data_prepared.tofile(self.data_prepared, sep=',')
+        train_labels.to_csv(self.train_labels, sep=',')
 
 
 if __name__ == "__main__":
