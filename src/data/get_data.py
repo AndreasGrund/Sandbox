@@ -51,7 +51,6 @@ class GetData(luigi.Task):
             file_tgz.extractall(path=path)
             file_tgz.close()
 
-
         logger.info('load local data from {}'.format(self._PATH))
 
         fetch_data()

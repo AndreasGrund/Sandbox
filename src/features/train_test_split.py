@@ -68,7 +68,6 @@ class TrainTestSplit(luigi.Task):
 
             return strat_train_set, strat_test_set
 
-
         data = pd.read_csv(self.csv_path, sep=',')
 
         # train, test = build_test_set(self)
