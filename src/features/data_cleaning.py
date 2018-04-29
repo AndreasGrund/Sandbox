@@ -22,6 +22,7 @@ logger = logging.getLogger('pipeline')
 logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),
                                           'pipeline'), level=logging.DEBUG)
 
+#TODO: Refactor Pipeline
 
 class DataFrameSelector(BaseEstimator, TransformerMixin):
     def __init__(self, attribute_names):
@@ -97,6 +98,12 @@ class DataCleaning(luigi.Task):
         train = train_raw.drop(self.target_value, axis=1)
         train_labels = train_raw[self.target_value].copy()
 
+        # load test set
+        test_raw = pd.read_csv(config.feature_config['test'], sep=',', index_col=0)
+
+        test = test_raw.drop(self.target_value, axis=1)
+        test_labels = test_raw[self.target_value].copy()
+
         def num_inputer():
 
             logger.info('prepare numeric features')
@@ -153,62 +160,7 @@ class DataCleaning(luigi.Task):
         data_prepared.tofile(self.data_prepared, sep=',')
         train_labels.to_csv(self.train_labels, sep=',')
 
-        # load test set
-        test_raw = pd.read_csv(config.feature_config['test'], sep=',', index_col=0)
-
-        test = test_raw.drop(self.target_value, axis=1)
-        test_labels = test_raw[self.target_value].copy()
-
-        def num_inputer_test():
-            logger.info('prepare numeric features test')
-            print('prepare numeric features test')
-
-            test_num = test.select_dtypes(include=[np.number])
-            num_attribs = list(test_num)
-
-            num_steps = Pipeline([
-                ('selector', DataFrameSelector(num_attribs)),
-                ('imputer', Imputer(strategy=self.input_strategy)),
-                ('attribs_adder', CombinedAttributesAdder()),
-                ('std_scaler', StandardScaler()),
-            ])
-
-            return num_steps
-
-        def label_encoder_test():
-            logger.info('prepare cat features test')
-            print('prepare cat features test')
-
-            test_cat = test.select_dtypes(include=[np.chararray])
-
-            cat_attribs = list(test_cat)
-
-            cat_steps = Pipeline([
-                ('selector', DataFrameSelector(cat_attribs)),
-                ('label_binarizer', LabelBinarizerPipelineFriendly()),
-            ])
-
-            return cat_steps
-
-        def full_pipeline_test():
-            logger.info('prepare complete feature pipeline test')
-            print('prepare complete feature pipeline test')
-
-            full_pipeline_test = FeatureUnion(transformer_list=[
-                ('num_pipeline', num_pipeline_test),
-                ('cat_pipeline', cat_pipeline_test),
-            ])
-
-            return full_pipeline_test
-
-        num_pipeline_test = num_inputer_test()
-
-        cat_pipeline_test = label_encoder_test()
-
-        full_pipeline_test = full_pipeline_test()
-
-        data_prepared_test = full_pipeline_test.transform(test)
-
+        data_prepared_test = full_pipeline.transform(test)
 
         logger.info('save cleaned test set')
         print('save cleaned test set')

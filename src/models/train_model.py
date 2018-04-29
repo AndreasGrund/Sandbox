@@ -23,6 +23,7 @@ class ModelTrain(luigi.Task):
 
     data_prepared = config.feature_config["data_prepared"]
     train_labels = config.feature_config["train_labels"]
+    grid_search = config.grid_search["params"]
 
     def requires(self):
         return DataCleaning()
