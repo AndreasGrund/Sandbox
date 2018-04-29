@@ -6,8 +6,10 @@ import luigi
 import pandas as pd
 import numpy as np
 
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import cross_val_score
+from sklearn.externals import joblib
 
 from config.config import config
 from features.data_cleaning import DataCleaning
@@ -31,21 +33,29 @@ class ModelTrain(luigi.Task):
         pass
 
     def run(self):
+
         # load data
         train = np.loadtxt(self.data_prepared, delimiter=',')
         train = train.reshape((16512, 16))
 
         train_labels = np.loadtxt(self.train_labels, delimiter=',', usecols=1)
 
-        linear_reg = LinearRegression()
-        linear_reg.fit(train, train_labels)
+        # Define model
+        tree_reg = RandomForestRegressor()
 
-        predictions = linear_reg.predict(train)
+        scores = cross_val_score(tree_reg, train, train_labels, scoring="neg_mean_squared_error", cv=10)
 
-        linear_mse = mean_squared_error(train_labels, predictions)
-        linear_rmse = np.sqrt(linear_mse)
+        tree_rmse_scores = np.sqrt(-scores)
 
-        print(linear_rmse)
+        def display_scores(scores):
+            print("Scores: ", scores)
+            print("Mean: ", scores.mean())
+            print("Standard deviation: ", scores.std())
+
+        display_scores(tree_rmse_scores)
+
+        # save model
+        joblib.dump(tree_reg, "Random_Forest.pkl")
 
 
 if __name__ == "__main__":
