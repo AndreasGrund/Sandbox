@@ -3,12 +3,10 @@ import logging
 import os
 
 import luigi
-import pandas as pd
 import numpy as np
 
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
 from sklearn.externals import joblib
 
 from config.config import config
@@ -30,7 +28,7 @@ class ModelTrain(luigi.Task):
         return DataCleaning()
 
     def output(self):
-        pass
+        return luigi.LocalTarget("Random_Forest.pkl")
 
     def run(self):
 
@@ -43,19 +41,22 @@ class ModelTrain(luigi.Task):
         # Define model
         tree_reg = RandomForestRegressor()
 
-        scores = cross_val_score(tree_reg, train, train_labels, scoring="neg_mean_squared_error", cv=10)
+        logger.info("Running grid search for %s", 'Random Forest')
 
-        tree_rmse_scores = np.sqrt(-scores)
+        # ToDo: add Randomized Search
+        grid_search = GridSearchCV(tree_reg, self.grid_search, cv=5, scoring="neg_mean_squared_error")
 
-        def display_scores(scores):
-            print("Scores: ", scores)
-            print("Mean: ", scores.mean())
-            print("Standard deviation: ", scores.std())
+        grid_search.fit(train, train_labels)
 
-        display_scores(tree_rmse_scores)
+        logger.info('performance Random_Forest:')
+        logger.info('best parameters: %s', grid_search.best_params_)
+        logger.info('best model: %s', grid_search.best_estimator_)
+
+        # ToDO: add information about feature importance
+        logger.info('feature importance: %s', grid_search.best_estimator_.feature_importances_)
 
         # save model
-        joblib.dump(tree_reg, "Random_Forest.pkl")
+        joblib.dump(grid_search.best_estimator_, "Random_Forest.pkl")
 
 
 if __name__ == "__main__":
