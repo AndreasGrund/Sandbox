@@ -22,6 +22,7 @@ logger = logging.getLogger('pipeline')
 logging.basicConfig(filename=os.path.join(os.path.join(os.path.abspath(os.path.join(current_dir, "../..")), 'logs'),
                                           'pipeline'), level=logging.DEBUG)
 
+#TODO: Refactor Pipeline
 
 class DataFrameSelector(BaseEstimator, TransformerMixin):
     def __init__(self, attribute_names):
@@ -74,13 +75,18 @@ class DataCleaning(luigi.Task):
     input_strategy = config.feature_config["input_strategy"]
     data_prepared = config.feature_config["data_prepared"]
     train_labels = config.feature_config["train_labels"]
+    data_prepared_test = config.feature_config["data_prepared_test"]
+    test_labels = config.feature_config["test_labels"]
 
     def requires(self):
         return TrainTestSplit()
 
     def output(self):
         return {'data_prepared': luigi.LocalTarget(self.data_prepared),
-                'train_labels': luigi.LocalTarget(self.train_labels)}
+                'train_labels': luigi.LocalTarget(self.train_labels),
+                'data_prepared_test': luigi.LocalTarget(self.data_prepared_test),
+                'test_labels': luigi.LocalTarget(self.test_labels)
+                }
 
     def run(self):
         """
@@ -91,6 +97,12 @@ class DataCleaning(luigi.Task):
 
         train = train_raw.drop(self.target_value, axis=1)
         train_labels = train_raw[self.target_value].copy()
+
+        # load test set
+        test_raw = pd.read_csv(config.feature_config['test'], sep=',', index_col=0)
+
+        test = test_raw.drop(self.target_value, axis=1)
+        test_labels = test_raw[self.target_value].copy()
 
         def num_inputer():
 
@@ -147,6 +159,13 @@ class DataCleaning(luigi.Task):
         print('save cleaned train set')
         data_prepared.tofile(self.data_prepared, sep=',')
         train_labels.to_csv(self.train_labels, sep=',')
+
+        data_prepared_test = full_pipeline.transform(test)
+
+        logger.info('save cleaned test set')
+        print('save cleaned test set')
+        data_prepared_test.tofile(self.data_prepared_test, sep=',')
+        test_labels.to_csv(self.test_labels, sep=',')
 
 
 if __name__ == "__main__":

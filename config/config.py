@@ -28,9 +28,14 @@ class ParamConfig:
                     "target_value": "median_house_value",
                     "input_strategy": "median",
                     "data_prepared": os.path.join(self.project_folder["folder"], 'data/processed/train_prepared.txt'),
-                    "train_labels": os.path.join(self.project_folder["folder"], 'data/processed/train_labels.txt')
-
+                    "train_labels": os.path.join(self.project_folder["folder"], 'data/processed/train_labels.txt'),
+                    "data_prepared_test": os.path.join(self.project_folder["folder"], 'data/processed/test_prepared.txt'),
+                    "test_labels": os.path.join(self.project_folder["folder"], 'data/processed/test_labels.txt'),
+                    "save_model": os.path.join(self.project_folder["folder"], 'data/model/')
         }
+
+        self.grid_search = [{'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]},
+                            {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]}, ]
 
 
 # initialize a param config
